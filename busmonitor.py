@@ -1,19 +1,17 @@
 from eibconnection import EIBConnection, EIBBuffer
-PACKET_READ = 0x00
-PACKET_RESPONSE = 0x40
-PACKET_WRITE = 0x80
-
+from eibd_stack import LPDUFrame
 
 def main():
     conn = EIBConnection()
     buf = EIBBuffer()
     sock = conn.EIBSocketURL('ip:52.16.249.130')
     print sock
-    conn.EIBOpenBusmonitorText()
+    conn.EIBOpenBusmonitor()
     while True:
         length = conn.EIBGetBusmonitorPacket(buf)
         print length
-        print(''.join(chr(i) for i in buf.buffer))
+        lpdu = LPDUFrame.from_packet(buf.buffer)
+        print(lpdu.decode())
 
 if __name__ == '__main__':
     main()

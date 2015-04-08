@@ -22,21 +22,27 @@ def main():
         length = conn.EIBGetBusmonitorPacket(buf)
         lpdu = LPDUFrame.from_packet(buf.buffer)
         if isinstance(lpdu, LPDUDataFrame):
-            print('''address type: {}
+            print('''repeated: {}
+valid length: {}
+valid checksum: {}
 source: {}
+destination address type: {}
 destination: {}
-hops: {},
-priority: {},
-tpdu_frame: {},
+hops: {}
+priority: {}
+tpdu_frame: {}
 layer 4 raw data: {}''').format(
+                lpdu.repeated,
+                lpdu.valid_length,
+                lpdu.valid_checksum,
+                lpdu.source,
                 addr_types[lpdu.addr_type],
-                lpdu.source, lpdu.destination,
+                lpdu.destination,
                 lpdu.hops,
                 prios[lpdu.priority],
                 lpdu.tpdu_frame().decode(),
                 lpdu.data()
             )
-        print(lpdu.decode())
 
 if __name__ == '__main__':
     main()

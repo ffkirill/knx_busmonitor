@@ -50,12 +50,13 @@ layer 4 raw data: {}''').format(
 
 
 class EIBHandler(object):
-    def __init__(self, frontend):
+    def __init__(self, url, frontend):
         self._ioloop = tornado.ioloop.IOLoop.instance()
         self.frontend = frontend
         self.keep_running = True
         self.fd = None
         self.fd_is_open = False
+        self.url = url
         super(EIBHandler, self).__init__()
 
     @gen.coroutine
@@ -76,7 +77,7 @@ class EIBHandler(object):
         buf = EIBBuffer()
 
         # open socket
-        if conn.EIBSocketURL('ip:52.16.249.130') == -1:
+        if conn.EIBSocketURL(self.url) == -1:
             raise RuntimeError('Connection open failed')
 
         self.fd = conn.EIB_Poll_FD().fileno()

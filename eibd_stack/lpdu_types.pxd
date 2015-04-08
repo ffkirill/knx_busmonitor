@@ -1,14 +1,5 @@
-cdef extern from "common.h":
-    cdef cppclass CArray:
-        CArray(unsigned char[], unsigned) except +
-        CArray() except +
-        unsigned char& operator[](size_t) nogil
-        void resize (unsigned) nogil
-
-cdef extern from "my_strings.h":
-    cdef cppclass String:
-        const char* call "operator()" () nogil
-
+from libcpp cimport bool
+from basic_types cimport CArray, String, EIB_AddrType, eibaddr_t, EIB_Priority
 
 cdef extern from "lpdu.h":
     cdef cppclass LPDU:
@@ -17,3 +8,13 @@ cdef extern from "lpdu.h":
 
         @staticmethod
         LPDU * fromPacket(CArray&) except +
+
+    cdef cppclass L_Data_PDU(LPDU):
+        bool repeated
+        bool valid_checksum
+        bool valid_length
+        EIB_AddrType AddrType
+        eibaddr_t source
+        eibaddr_t dest
+        unsigned char hopcount
+        EIB_Priority prio

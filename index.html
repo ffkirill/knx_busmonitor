@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<script>
+    var ws = new WebSocket('ws://' + document.location.host + '/websocket');
+            ws.onopen = function () {
+                console.log('Socket opened');
+            };
+
+            ws.onclose = function () {
+                console.log('Socket close');
+            };
+
+            ws.onmessage = function (e) {
+                console.log(e.data);
+            };
+
+</script>
+</body>
+</html>

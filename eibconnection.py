@@ -155,6 +155,7 @@ class EIBConnection:
       for a in result:
         self.head.append(ord(a))
       self.readlen += len(result)
+      return 0
     if self.readlen < 2:
       return 0
     self.datalen = (self.head[0] << 8) | self.head[1]

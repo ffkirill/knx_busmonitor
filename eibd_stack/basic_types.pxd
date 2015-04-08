@@ -6,6 +6,7 @@ cdef extern from "common.h":
         CArray() except +
         unsigned char& operator[](size_t) nogil
         void resize (unsigned) nogil
+        size_t call "operator()" () nogil
 
     cdef enum EIB_AddrType:
         GroupAddress

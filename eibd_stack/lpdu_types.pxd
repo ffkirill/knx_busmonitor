@@ -18,3 +18,4 @@ cdef extern from "lpdu.h":
         eibaddr_t dest
         unsigned char hopcount
         EIB_Priority prio
+        CArray data

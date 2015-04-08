@@ -1,18 +1,28 @@
 cimport basic_types
-from lpdu_types cimport (LPDU, L_Data_PDU, String, CArray)
-
+from basic_types cimport String, CArray
+from lpdu_types cimport LPDU, L_Data_PDU
+from tpdu_types cimport TPDU
+from cpython cimport array as c_array
 
 cdef bytes as_bytes(String _str):
     return <bytes> (_str.call())
 
 
-cdef LPDU* _lpdu_from_packet(object packet):
-    cdef CArray packet_carray
+cdef c_array.array as_array(CArray& seq):
+    cdef out_array = c_array.array('i')
     cdef size_t i
-    packet_carray.resize(len(packet))
-    for i, val in enumerate(packet):
-        packet_carray[i] = val
-    return LPDU.fromPacket(packet_carray)
+    for i in range(seq.call()):
+        out_array.append(seq[i])
+    return out_array
+
+
+cdef CArray as_cArray(object seq):
+    cdef CArray out_array
+    cdef size_t i
+    out_array.resize(len(seq))
+    for i, val in enumerate(seq):
+        out_array[i] = val
+    return out_array
 
 
 cdef class EIBAddr:
@@ -44,7 +54,7 @@ cdef class LPDUFrame:
 
     @staticmethod
     def from_packet(packet):
-        ptr = _lpdu_from_packet(packet)
+        ptr = LPDU.fromPacket(as_cArray(packet))
         if <L_Data_PDU*?> ptr:
             lpdu = LPDUDataFrame()
         else:
@@ -55,7 +65,6 @@ cdef class LPDUFrame:
     def decode(self):
         if self.thisptr:
             return as_bytes(self.thisptr.Decode())
-
 
 
 cdef class LPDUDataFrame(LPDUFrame):
@@ -109,3 +118,37 @@ cdef class LPDUDataFrame(LPDUFrame):
     def priority(self):
         if self.thisptr:
             return (<L_Data_PDU*>self.thisptr).prio
+
+    def tpdu_frame(self):
+        return TPDUFrame._from_packet_carray((<L_Data_PDU*>self.thisptr).data)
+
+    def data(self):
+        return as_array((<L_Data_PDU*>self.thisptr).data)
+
+
+cdef class TPDUFrame:
+    cdef TPDU *thisptr      # hold a C++ instance which we're wrapping
+
+    def __cinit__(self):
+        pass
+
+    def __dealloc__(self):
+        del self.thisptr
+
+    @staticmethod
+    cdef _from_packet_carray(CArray packet):
+        ptr = TPDU.fromPacket(packet)
+        tpdu = TPDUFrame()
+        tpdu.thisptr = ptr
+        return tpdu
+
+    @staticmethod
+    def from_packet(packet):
+        ptr = TPDU.fromPacket(as_cArray(packet))
+        tpdu = TPDUFrame()
+        tpdu.thisptr = ptr
+        return tpdu
+
+    def decode(self):
+        if self.thisptr:
+            return as_bytes(self.thisptr.Decode())

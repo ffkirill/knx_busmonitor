@@ -26,11 +26,15 @@ def main():
 source: {}
 destination: {}
 hops: {},
-priority: {}''').format(
+priority: {},
+tpdu_frame: {},
+layer 4 raw data: {}''').format(
                 addr_types[lpdu.addr_type],
                 lpdu.source, lpdu.destination,
                 lpdu.hops,
-                prios[lpdu.priority]
+                prios[lpdu.priority],
+                lpdu.tpdu_frame().decode(),
+                lpdu.data()
             )
         print(lpdu.decode())
 

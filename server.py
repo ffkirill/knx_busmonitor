@@ -55,8 +55,9 @@ class WebSocket(tornado.websocket.WebSocketHandler):
             self.write_message('invalid connection string')
             self.close()
             raise gen.Return()
-        self.socket_path = os.path.join(os.path.dirname(__file__),
-                                        str(uuid.uuid4()))
+        self.socket_path = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            str(uuid.uuid4()))
         self.subprocess = Subprocess(
             self.on_subprocess_exit,
             args=['eibd', 'iptn:{}:{}'.format(hostname, port),

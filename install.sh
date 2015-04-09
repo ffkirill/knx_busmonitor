@@ -7,4 +7,4 @@ sudo -u busmonitor ../../env/bin/python setup.py build
 cd ..
 sudo -u busmonitor cp eibd_stack/build/lib.linux-*/eibd_stack.so .
 ln -sf ${PWD}/busmonitor.supervisor.conf /etc/supervisor/conf.d/busmonitor.conf
-ln -sf ${PWD}/busmonitor.nginx.conf cat /etc/nginx/sites-enabled/busmonitor.conf
+ln -sf ${PWD}/busmonitor.nginx.conf /etc/nginx/sites-enabled/busmonitor.conf

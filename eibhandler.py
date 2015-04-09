@@ -49,6 +49,20 @@ layer 4 raw data: {}''').format(
         return lpdu.decode()
 
 
+def get_telegram_data(buf):
+    data = {'timeStamp': str(datetime.datetime.today())}
+
+    lpdu = LPDUFrame.from_packet(buf.buffer)
+    if isinstance(lpdu, LPDUDataFrame):
+        data['messageType'] = 'data'
+        data['sourceAddr'] = str(lpdu.source)
+        data['destinationAddr'] = str(lpdu.destination)
+        data['hopCount'] = lpdu.hops
+        data['proprity'] = prios[lpdu.priority]
+        data['decodedData'] = lpdu.tpdu_frame().decode()
+    return data
+
+
 class EIBHandler(object):
     def __init__(self, url, frontend):
         self._ioloop = tornado.ioloop.IOLoop.instance()
@@ -95,6 +109,8 @@ class EIBHandler(object):
             elif res == -1:
                 raise RuntimeError('Could not poll open bus monitor')
 
+        self.frontend.info('Opened Bus monitor mode')
+
         # request data
         while self.keep_running:
             conn.EIBGetBusmonitorPacket_async(buf)
@@ -102,7 +118,7 @@ class EIBHandler(object):
             res = conn.EIB_Poll_Complete()
             if res == 1:
                 conn.EIBComplete()
-                self.frontend.process_telegram(get_telegram_display(buf))
+                self.frontend.process_telegram(get_telegram_data(buf))
             elif res == -1:
                 raise RuntimeError('Could not poll bus monitor packet')
 

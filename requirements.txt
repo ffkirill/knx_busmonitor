@@ -4,3 +4,4 @@ certifi==14.05.14
 tornado==4.1
 wsgiref==0.1.2
 tornado-subprocess==0.1.4
+python-memcached==1.54

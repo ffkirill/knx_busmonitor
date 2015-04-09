@@ -4,6 +4,7 @@ import os
 import uuid
 
 from functools import partial
+import datetime
 
 import tornado.web
 import tornado.ioloop
@@ -11,8 +12,14 @@ import tornado.websocket
 from tornado import gen
 from tornado_subprocess import Subprocess
 from tornado.concurrent import Future
-import datetime
+
 from eibhandler import EIBHandler
+
+from tornado.options import define, options, parse_command_line
+
+define("address", default="", help="listen address", type=str)
+define("port", default=8888, help="run on the given port", type=int)
+define("debug", default=False, help="run in debug mode")
 
 
 def is_valid_hostname(hostname):
@@ -73,19 +80,17 @@ class WebSocket(tornado.websocket.WebSocketHandler):
         self.write_message(data)
 
 
-class Application(tornado.web.Application):
-    def __init__(self):
-
-        handlers = (
-            (r'/(index\.html)', tornado.web.StaticFileHandler,  {'path': '.'}),
+def main():
+    parse_command_line()
+    app = tornado.web.Application(
+        [
             (r'/websocket/(.*)', WebSocket),
+            ],
+        static_path=os.path.join(os.path.dirname(__file__), "static"),
+        debug=options.debug,
         )
-
-        tornado.web.Application.__init__(self, handlers)
-
-
-application = Application()
+    app.listen(options.port, address=options.address)
+    tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':
-    application.listen(8888)
-    tornado.ioloop.IOLoop.instance().start()
+    main()

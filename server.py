@@ -29,6 +29,7 @@ MEMCACHE_SERVERS = (
 MEMCACHE_PORT_KEY = 'knx_busmonitor_port'
 EIDB_STARTING_PORT = 3671
 
+
 def is_valid_hostname(hostname):
     if not hostname.strip() or len(hostname) > 255:
         return False
@@ -43,6 +44,7 @@ class WebSocket(tornado.websocket.WebSocketHandler):
     socket_path = None
     backend = None
     is_open = False
+    port_num = None
 
     def data_received(self, chunk):
         pass
@@ -64,13 +66,24 @@ class WebSocket(tornado.websocket.WebSocketHandler):
         pass
 
     def on_subprocess_exit(self, status, stdout, stderr):
-        self.application.memcache_connection.decr(MEMCACHE_PORT_KEY, 1)
+        self.release_port()
         self.error('EIBD unexpected termination: {} {}'.format(stderr, stdout))
         try:
             os.remove(self.socket_path)
         except:
             pass
         self.close()
+
+    def acquire_port(self):
+        num = EIDB_STARTING_PORT
+        while not self.application.memcache_connection.add(
+                '{}_{}'.format(MEMCACHE_PORT_KEY, num), ''):
+            num += 1
+        return num
+
+    def release_port(self):
+        self.application.memcache_connection.delete('{}_{}'.format(
+            MEMCACHE_PORT_KEY, self.port_num))
 
     @gen.coroutine
     def open(self, remote_host):
@@ -84,17 +97,11 @@ class WebSocket(tornado.websocket.WebSocketHandler):
             self.socket_path = os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
                 str(uuid.uuid4()))
-            if self.application.memcache_connection.add(MEMCACHE_PORT_KEY,
-                                                        EIDB_STARTING_PORT):
-                local_port = EIDB_STARTING_PORT
-            else:
-                local_port = self.application.memcache_connection.incr(
-                    MEMCACHE_PORT_KEY,
-                    1
-                )
+            self.port_num = self.acquire_port()
             self.subprocess = Subprocess(
                 self.on_subprocess_exit,
-                args=['eibd', 'iptn:{}:{}:{}'.format(hostname, port, local_port),
+                args=['eibd', 'iptn:{}:{}:{}'.format(hostname, port,
+                                                     self.port_num),
                       '--listen-local={}'.format(self.socket_path)])
             self.subprocess.start()
             f = Future()
